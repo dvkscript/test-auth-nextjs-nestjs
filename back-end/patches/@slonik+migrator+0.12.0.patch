@@ -1,0 +1,106 @@
+diff --git a/node_modules/@slonik/migrator/dist/index.js b/node_modules/@slonik/migrator/dist/index.js
+index 6153f5c..1792e30 100644
+--- a/node_modules/@slonik/migrator/dist/index.js
++++ b/node_modules/@slonik/migrator/dist/index.js
+@@ -14,7 +14,7 @@ class SlonikMigrator extends umzug.Umzug {
+         super({
+             context: () => ({
+                 parent: slonikMigratorOptions.slonik,
+-                sql: slonik_1.sql,
++                sql: slonik_1.sql.unsafe,
+                 connection: null, // connection function is added later by storage setup.
+             }),
+             migrations: () => ({
+@@ -97,12 +97,12 @@ class SlonikMigrator extends umzug.Umzug {
+         return {
+             name: params.name,
+             path: params.path,
+-            up: async (upParams) => migrationModule.up({ slonik, sql: slonik_1.sql, ...upParams }),
+-            down: async (downParams) => { var _a; return (_a = migrationModule.down) === null || _a === void 0 ? void 0 : _a.call(migrationModule, { slonik, sql: slonik_1.sql, ...downParams }); },
++            up: async (upParams) => migrationModule.up({ slonik, sql: slonik_1.sql.unsafe, ...upParams }),
++            down: async (downParams) => { var _a; return (_a = migrationModule.down) === null || _a === void 0 ? void 0 : _a.call(migrationModule, { slonik, sql: slonik_1.sql.unsafe, ...downParams }); },
+         };
+     }
+     async getOrCreateMigrationsTable(context) {
+-        await context.parent.query((0, slonik_1.sql) `
++        await context.parent.query((0, slonik_1.sql.unsafe) `
+       create table if not exists ${this.migrationTableNameIdentifier()}(
+         name text primary key,
+         hash text not null,
+@@ -197,7 +197,7 @@ class SlonikMigrator extends umzug.Umzug {
+      */
+     async executedInfos(context) {
+         await this.getOrCreateMigrationsTable(context);
+-        const migrations = await context.parent.any((0, slonik_1.sql) `select name, hash from ${this.migrationTableNameIdentifier()}`);
++        const migrations = await context.parent.any((0, slonik_1.sql.unsafe) `select name, hash from ${this.migrationTableNameIdentifier()}`);
+         return migrations.map(r => {
+             const name = r.name;
+             return {
+@@ -208,19 +208,19 @@ class SlonikMigrator extends umzug.Umzug {
+         });
+     }
+     async logMigration({ name, context }) {
+-        await context.connection.query((0, slonik_1.sql) `
++        await context.connection.query((0, slonik_1.sql.unsafe) `
+       insert into ${this.migrationTableNameIdentifier()}(name, hash)
+       values (${name}, ${this.hash(name)})
+     `);
+     }
+     async unlogMigration({ name, context }) {
+-        await context.connection.query((0, slonik_1.sql) `
++        await context.connection.query((0, slonik_1.sql.unsafe) `
+       delete from ${this.migrationTableNameIdentifier()}
+       where name = ${name}
+     `);
+     }
+     async repairMigration({ name, hash, context }) {
+-        await context.connection.query((0, slonik_1.sql) `
++        await context.connection.query((0, slonik_1.sql.unsafe) `
+       update ${this.migrationTableNameIdentifier()}
+       set hash = ${hash}
+       where name = ${name}
+diff --git a/node_modules/@slonik/migrator/dist/templates.js b/node_modules/@slonik/migrator/dist/templates.js
+index 75b609b..6107195 100644
+--- a/node_modules/@slonik/migrator/dist/templates.js
++++ b/node_modules/@slonik/migrator/dist/templates.js
+@@ -1,30 +1,32 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.javascript = exports.typescript = exports.sqlDown = exports.sqlUp = void 0;
+-exports.sqlUp = `raise 'up migration not implemented'
+-`;
+-exports.sqlDown = `raise 'down migration not implemented'
++exports.sqlUp = `CREATE TABLE IF NOT EXISTS table_name (
++);
+ `;
++exports.sqlDown = `DROP TABLE IF EXISTS table_name;`;
+ exports.typescript = `
+ import {Migration} from '@slonik/migrator'
+ 
+ export const up: Migration = async ({context: {connection, sql}}) => {
+-  await connection.query(sql\`raise 'up migration not implemented'\`)
++  await connection.query(sql\`CREATE TABLE IF NOT EXISTS table_name (
++);\`)
+ }
+ 
+ export const down: Migration = async ({context: {connection, sql}}) => {
+-  await connection.query(sql\`raise 'down migration not implemented'\`)
++  await connection.query(sql\`DROP TABLE IF EXISTS table_name;\`)
+ }
+ `.trimLeft();
+ exports.javascript = `
+ /** @type {import('@slonik/migrator').Migration} */
+ exports.up = async ({context: {connection, sql}}) => {
+-  await connection.query(sql\`raise 'up migration not implemented'\`)
++  await connection.query(sql\`CREATE TABLE IF NOT EXISTS table_name (
++);\`)
+ }
+ 
+ /** @type {import('@slonik/migrator').Migration} */
+ exports.down = async ({context: {connection, sql}}) => {
+-  await connection.query(sql\`raise 'down migration not implemented'\`)
++  await connection.query(sql\`DROP TABLE IF EXISTS table_name;\`)
+ }
+ `.trimLeft();
+ //# sourceMappingURL=templates.js.map
+\ No newline at end of file
