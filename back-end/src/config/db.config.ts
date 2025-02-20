@@ -1,9 +1,15 @@
-import * as dotenv from 'dotenv';
+import { get } from 'env-var';
+import '../libs/utils/dotenv';
 
-dotenv.config();
+// https://github.com/Sairyss/backend-best-practices#configuration
 
-export const DB_URI = `postgres://${process.env.POSTGRES_USER
-    }:${process.env.POSTGRES_PASSWORD
-    }@${process.env.POSTGRES_HOST
-    }:${process.env.POSTGRES_PORT || 5432
-    }/${process.env.POSTGRES_DATABASE}`
+export const databaseConfig = {
+    type: 'postgres',
+    host: get('DB_HOST').required().asString(),
+    port: get('DB_PORT').required().asIntPositive(),
+    username: get('DB_USERNAME').required().asString(),
+    password: get('DB_PASSWORD').required().asString(),
+    database: get('DB_NAME').required().asString(),
+};
+
+export const postgresConnectionUri = `postgres://${databaseConfig.username}:${databaseConfig.password}@${databaseConfig.host}/${databaseConfig.database}`;

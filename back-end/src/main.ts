@@ -3,6 +3,7 @@ declare const module: any;
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { BadRequestException, ValidationError, ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 const allowlist = ['http://example1.com', 'http://example2.com']
 const corsOptionsDelegate = function (req: any, callback: any) {
@@ -20,16 +21,23 @@ async function bootstrap() {
     cors: true,
   });
   app.enableCors(corsOptionsDelegate);
+
+  const options = new DocumentBuilder().build();
+
+  const document = SwaggerModule.createDocument(app, options);
+  SwaggerModule.setup('docs', app, document);
+
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
-    exceptionFactory: (validationErrors: any) => {
-      return new BadRequestException(
-        validationErrors.map((error: ValidationError) => ({
-          field: error.property,
-          error: Object.values(error.constraints || {}).join(', '),
-        })),
-      );
-    },
+    whitelist: true
+    // exceptionFactory: (validationErrors: any) => {
+    //   return new BadRequestException(
+    //     validationErrors.map((error: ValidationError) => ({
+    //       field: error.property,
+    //       error: Object.values(error.constraints || {}).join(', '),
+    //     })),
+    //   );
+    // },
   }));
   await app.listen(process.env.PORT ?? 3000);
 

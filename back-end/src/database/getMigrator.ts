@@ -1,12 +1,12 @@
 import { SlonikMigrator } from '@slonik/migrator';
 import { createPool } from 'slonik';
 import * as path from 'path';
-import { DB_URI } from '../config/db.config';
+import { postgresConnectionUri } from '../config/db.config';
 
 const migrationTableName = 'migration';
 
 export async function getMigrator() {
-  const pool = await createPool(DB_URI);
+  const pool = await createPool(postgresConnectionUri);
 
   const migrator = new SlonikMigrator({
     migrationsPath: path.resolve(__dirname, 'migrations'),

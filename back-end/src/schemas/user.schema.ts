@@ -12,4 +12,4 @@ export const UserSchema = z.object({
 
 export const UserFields = Object.keys(UserSchema.shape); 
 
-export type User = z.infer<typeof UserSchema>;
+export type UserModel = z.infer<typeof UserSchema>;

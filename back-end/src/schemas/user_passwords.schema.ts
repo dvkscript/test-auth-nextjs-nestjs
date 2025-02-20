@@ -8,4 +8,4 @@ export const UserPasswordSchema = z.object({
   updated_at: z.coerce.date(),
 });
 
-export type UserPassword = z.infer<typeof UserPasswordSchema>;
+export type UserPasswordModel = z.infer<typeof UserPasswordSchema>;
